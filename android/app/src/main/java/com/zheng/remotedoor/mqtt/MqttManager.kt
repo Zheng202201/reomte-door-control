@@ -13,6 +13,7 @@ import com.zheng.remotedoor.MqttConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +27,7 @@ class MqttManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var client: Mqtt3AsyncClient? = null
+    private var topicsSubscribed = false
 
     private var savedHost: String? = null
     private var savedPort: Int = MqttConfig.DEFAULT_PORT
@@ -58,8 +60,8 @@ class MqttManager {
         scope.launch { connectInternal(host, port, username, password) }
     }
 
-    suspend fun ensureConnected(): Boolean = withContext(Dispatchers.IO) {
-        if (isClientConnected()) return@withContext true
+    suspend fun ensureConnected(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
+        if (!force && isClientHealthy()) return@withContext true
         val host = savedHost ?: run {
             _lastError.value = "无保存的连接信息"
             return@withContext false
@@ -76,8 +78,6 @@ class MqttManager {
         password: String
     ): Boolean {
         return try {
-            if (isClientConnected()) return true
-
             disconnectInternal(publishOff = false)
             _connectionState.value = ConnectionState.CONNECTING
             _lastError.value = null
@@ -91,11 +91,14 @@ class MqttManager {
                 .automaticReconnectWithDefaultConfig()
                 .addConnectedListener {
                     scope.launch {
-                        client?.let { subscribeTopics(it) }
-                        _connectionState.value = ConnectionState.CONNECTED
+                        client?.let {
+                            subscribeTopics(it)
+                            _connectionState.value = ConnectionState.CONNECTED
+                        }
                     }
                 }
                 .addDisconnectedListener {
+                    topicsSubscribed = false
                     _connectionState.value = ConnectionState.DISCONNECTED
                     resetStreamState()
                 }
@@ -121,18 +124,20 @@ class MqttManager {
                 false
             }
         } catch (e: Exception) {
+            topicsSubscribed = false
             _connectionState.value = ConnectionState.DISCONNECTED
             _lastError.value = e.message ?: "连接异常"
             false
         }
     }
 
-    private fun isClientConnected(): Boolean {
+    private fun isClientHealthy(): Boolean {
         val mqttClient = client ?: return false
-        return mqttClient.state == MqttClientState.CONNECTED
+        return mqttClient.state == MqttClientState.CONNECTED && topicsSubscribed
     }
 
-    private fun subscribeTopics(mqttClient: Mqtt3AsyncClient) {
+    private suspend fun subscribeTopics(mqttClient: Mqtt3AsyncClient) {
+        topicsSubscribed = false
         mqttClient.subscribeWith()
             .topicFilter(MqttConfig.TOPIC_VIDEO)
             .qos(MqttQos.AT_MOST_ONCE)
@@ -153,6 +158,7 @@ class MqttManager {
                 }
             }
             .send()
+            .get(10, TimeUnit.SECONDS)
 
         mqttClient.subscribeWith()
             .topicFilter(MqttConfig.TOPIC_VIDEO_STATUS)
@@ -161,6 +167,9 @@ class MqttManager {
                 _cameraStatus.value = publish.payloadAsBytes.toString(Charsets.UTF_8)
             }
             .send()
+            .get(10, TimeUnit.SECONDS)
+
+        topicsSubscribed = true
     }
 
     suspend fun setStreamEnabled(enabled: Boolean): Boolean {
@@ -169,10 +178,19 @@ class MqttManager {
             resetStreamState()
             return true
         }
-        if (!ensureConnected()) {
+
+        if (!ensureConnected(force = true)) {
             _lastError.value = "MQTT 未连接，无法开启视频"
             return false
         }
+
+        _frameCount.value = 0
+        _latestFrame.value?.recycle()
+        _latestFrame.value = null
+
+        // 先关再开，确保 ESP32 重新进入推流状态
+        publish(MqttConfig.TOPIC_VIDEO_CONTROL, "off")
+        delay(300)
         val success = publish(MqttConfig.TOPIC_VIDEO_CONTROL, "on")
         if (success) {
             _streamEnabled.value = true
@@ -216,6 +234,7 @@ class MqttManager {
                 .get(10, TimeUnit.SECONDS)
             true
         } catch (e: Exception) {
+            topicsSubscribed = false
             _connectionState.value = ConnectionState.DISCONNECTED
             _lastError.value = "发送失败: ${e.message}"
             false
@@ -245,6 +264,7 @@ class MqttManager {
         } catch (_: Exception) {
         } finally {
             client = null
+            topicsSubscribed = false
             _connectionState.value = ConnectionState.DISCONNECTED
             resetStreamState()
         }

@@ -17,6 +17,8 @@ import com.zheng.remotedoor.MainActivity
 import com.zheng.remotedoor.R
 import com.zheng.remotedoor.RemoteDoorApp
 import com.zheng.remotedoor.databinding.FragmentHomeBinding
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -32,6 +34,7 @@ class HomeFragment : Fragment() {
 
     private var streamStartTime = 0L
     private var hasReceivedFrame = false
+    private var frameWatchdogJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -126,15 +129,6 @@ class HomeFragment : Fragment() {
         updateStreamUi(enabled = true, waiting = true)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val connected = mqttManager.ensureConnected()
-            if (!connected) {
-                fab.isEnabled = true
-                updateStreamUi(enabled = false, waiting = false)
-                val message = mqttManager.lastError.value ?: getString(R.string.mqtt_reconnect_failed)
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-
             val success = mqttManager.setStreamEnabled(true)
             fab.isEnabled = true
             if (!success) {
@@ -146,6 +140,7 @@ class HomeFragment : Fragment() {
 
             streamStartTime = System.currentTimeMillis()
             hasReceivedFrame = false
+            startFrameWatchdog()
             (activity as? MainActivity)?.startAutoCloseTimer(
                 seconds = 60,
                 onTick = { sec ->
@@ -160,9 +155,25 @@ class HomeFragment : Fragment() {
     }
 
     private fun stopVideoStream() {
+        frameWatchdogJob?.cancel()
+        frameWatchdogJob = null
         viewLifecycleOwner.lifecycleScope.launch {
             mqttManager.setStreamEnabled(false)
             (activity as? MainActivity)?.cancelAutoCloseTimer()
+        }
+    }
+
+    private fun startFrameWatchdog() {
+        frameWatchdogJob?.cancel()
+        frameWatchdogJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(12_000)
+            if (!mqttManager.streamEnabled.value || hasReceivedFrame) return@launch
+            stopVideoStream()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.mqtt_stream_no_frame),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -218,6 +229,8 @@ class HomeFragment : Fragment() {
                     }
                     if (bitmap != null) {
                         hasReceivedFrame = true
+                        frameWatchdogJob?.cancel()
+                        frameWatchdogJob = null
                         showVideoFrame(bitmap)
                         updateStreamUi(enabled = true, waiting = false)
                     }
