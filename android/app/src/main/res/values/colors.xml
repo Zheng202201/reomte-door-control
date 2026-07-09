@@ -8,4 +8,6 @@
     <color name="stream_active">#2ECC71</color>
     <color name="stream_inactive">#95A5A6</color>
     <color name="stream_waiting">#F39C12</color>
+    <color name="login_hint">#B0BEC5</color>
+    <color name="login_input_stroke">#546E7A</color>
 </resources>

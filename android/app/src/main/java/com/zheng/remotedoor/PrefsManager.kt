@@ -28,6 +28,17 @@ class PrefsManager(context: Context) {
         get() = prefs.getBoolean(KEY_REMEMBER, true)
         set(value) = prefs.edit().putBoolean(KEY_REMEMBER, value).apply()
 
+    fun hasSavedCredentials(): Boolean =
+        username.isNotBlank() && password.isNotBlank()
+
+    fun saveLoginCredentials(host: String, port: Int, user: String, pass: String) {
+        mqttHost = host
+        mqttPort = port
+        username = user
+        password = pass
+        rememberCredentials = true
+    }
+
     fun clearCredentials() {
         prefs.edit()
             .remove(KEY_USERNAME)

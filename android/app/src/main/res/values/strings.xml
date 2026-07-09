@@ -6,6 +6,8 @@
     <string name="port_hint">端口</string>
     <string name="username_hint">用户名</string>
     <string name="password_hint">密码</string>
+    <string name="auto_login_in_progress">正在自动连接...</string>
+    <string name="auto_login_failed">自动登录失败，请手动登录</string>
     <string name="remember_credentials">记住凭据</string>
     <string name="login">连接</string>
     <string name="logout">退出登录</string>
