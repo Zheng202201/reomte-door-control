@@ -1,0 +1,1096 @@
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ESP32门禁控制系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50, #1a2a6c);
+            color: white;
+            min-height: 100vh;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 15px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 15px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+            color: #ffcc00;
+        }
+        
+        /* 登录表单样式 */
+        .login-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .input-group label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        
+        .login-input {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+        
+        .login-input:focus {
+            border-color: #3498db;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .login-btn {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            min-width: 100px;
+            align-self: flex-end;
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(to right, #2980b9, #3498db);
+            transform: translateY(-2px);
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: none;
+            border-radius: 50px;
+            padding: 6px 15px;
+            font-size: 0.9rem;
+            cursor: button;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            flex-shrink: 0;
+        }
+        
+        .status-dot.connected {
+            background-color: #2ecc71;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .video-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 极简风格
+        }
+        
+        .video-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 15极简风格
+        }
+        
+        .video-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #111;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .video-placeholder .icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            color: #444;
+        }
+        
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .control-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ffcc00;
+            padding-bottom: 8px;
+            position: relative;
+        }
+        
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 30%;
+            right: 30%;
+            height: 3极简风格
+        }
+        
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 30%;
+            right: 30%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #3498db, transparent);
+        }
+        
+        #video {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            background: #000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .stream-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        #toggleBtn {
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 260px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #toggleBtn:hover {
+            background: linear-gradient(to right, #2980b9, #3498db);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        #toggleBtn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .countdown-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #ffcc00;
+            width: 0%;
+            transition: width 1s linear;
+        }
+        
+        .door-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: center;
+        }
+        
+        .door-type {
+            flex: 1 1 45%;
+            min-width: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        .door-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ffcc00;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 12px;
+        }
+        
+        .control-btn {
+            padding: 12px 8px;
+            background: linear-gradient(to bottom, #2c3e50, #1a2a3a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0,0)
+        }
+        
+        .control-btn {
+            padding: 12px 8px;
+            background: linear-gradient(to bottom, #2c3e50, #1a2a3a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .control-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .control-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .iron-btn {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+        }
+        
+        .iron-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #c0392b, #e74c3c);
+        }
+        
+极简风格
+        .glass-btn {
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+        }
+        
+        .glass-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #27ae60, #2ecc71);
+        }
+        
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            width: 100%;
+        }
+        
+        .connection-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        
+        .stream-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #bbb;
+        }
+        
+        .stats-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stats-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 5px;
+            color: #3498db;
+        }
+        
+        .auto-close-info {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 1rem;
+            color: #ffcc00;
+        }
+        
+        /* 连接动画 */
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+        
+        .header-info {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+        
+        .stream-warning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(192, 57, 43, 0.8);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 1rem;
+            display: none;
+            z-index: 10;
+            animation: fadeInOut 2s infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .auto-close-countdown {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ffcc00;
+            margin-left: 5px;
+        }
+        
+        .login-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .login-status.connected {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .login-status.disconnected {
+            background: rgba(231, 76, 60, 0.2);
+            color: #eee
+        }
+        
+        .login-status.disconnected {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .error-message {
+            width: 100%;
+            text-align: center;
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .remember-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        #rememberCheckbox {
+            margin-right: 8px;
+        }
+        
+        .remember-label {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 500px) {
+            .login-form {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+            
+            .login-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .door-type {
+                min-width: 100%;
+            }
+            
+            .logout-btn {
+                top: 10px;
+                right: 10px;
+                padding: 4px 10px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="login-status disconnected" id="loginStatus">未登录</div><br/>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">退出登录</button>
+            <br/>
+            <!-- 登录表单 -->
+            <div class="login-form" id="loginForm">
+                <div class="input-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" class="login-input" placeholder="admin" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="login-input" placeholder="password" autocomplete="off">
+                </div>
+                
+                <button id="loginBtn" class="login-btn">登 录</button>
+            </div>
+            
+            <div class="remember-container">
+                <input type="checkbox" id="rememberCheckbox" checked>
+                <label for="rememberCheckbox" class="remember-label">记住我的凭据</label>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot pulse" id="mqttStatus"></div>
+                    <span id="mqttStatusText">MQTT: 未连接</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" id="streamStatus"></div>
+                    <span id="streamStatusSpan">视频流: 关闭</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="video-section">
+                <h2 class="panel-title">摄像头监控</h2>
+                
+                <div class="stream-stats">
+                    <div class="stats-item">
+                        <div>帧率</div>
+                        <div class="stats-value" id="fpsValue">0</div>
+                    </div>
+                    <div class="stats-item">
+                        <div>延迟</div>
+                        <div class="stats-value" id="latencyValue">0ms</div>
+                    </div>
+                    <div class="stats-item">
+                        <div>状态</div>
+                        <div class="stats-value" id="streamHealth">离线</div>
+                    </div>
+                </div>
+                
+                <div class="connection-info">
+                    服务器: 47.122.129.16:9001<br>
+                    客户端ID: <span id="clientId"></span>
+                </div>
+                <div class="stream-control">
+                    <div class="auto-close-info">
+                        视频流将在 <span class="auto-close-countdown" id="countdownText">60</span> 秒后自动关闭
+                    </div>
+                </div>
+                <button id="toggleBtn" disabled>
+                    <span id="btnText">开启视频流</span>
+                    <div class="countdown-bar" id="countdownBar"></div>
+                </button>
+                <div class="video-placeholder" id="videoPlaceholder">
+                    <div class="icon">📷</div>
+                    <div>视频流未开启</div>
+                </div>
+                
+                <img id="video" src="" alt="视频流将在此处显示">
+                
+                <div class="stream-warning" id="streamWarning">视频流中断！</div>
+            </div>
+            
+        </div>
+        
+        <!-- <footer>
+            <p>ESP32智能门禁控制系统 | © 2025</p>
+        </footer> -->
+    </div>
+    
+    <script>
+        // 全局变量
+        var client;
+        var streamEnabled = false;
+        var button = document.getElementById('toggleBtn');
+        var btnText = document.getElementById('btnText');
+        var countdownBar = document.getElementById('countdownBar');
+        var countdownText = document.getElementById('countdownText');
+        var video = document.getElementById('video');
+        var videoPlaceholder = document.getElementById('videoPlaceholder');
+        var streamWarning = document.getElementById('streamWarning');
+        var mqttStatus = document.getElementById('mqttStatus');
+        var streamStatus = document.getElementById('streamStatus');
+        var streamStatusSpan = document.getElementById('streamStatusSpan');
+        var mqttStatusText = document.getElementById('mqttStatusText');
+        var clientIdSpan = document.getElementById('clientId');
+        var fpsValue = document.getElementById('fpsValue');
+        var latencyValue = document.getElementById('latencyValue');
+        var streamHealth = document.getElementById('streamHealth');
+        var loginBtn = document.getElementById('loginBtn');
+        var logoutBtn = document.getElementById('logoutBtn');
+        var loginForm = document.getElementById('loginForm');
+        var loginStatus = document.getElementById('loginStatus');
+        var errorMessage = document.getElementById('errorMessage');
+        var rememberCheckbox = document.getElementById('rememberCheckbox');
+        
+        // 视频流状态变量
+        var lastVideoTime = 0;
+        var frameCount = 0;
+        var startTime = 0;
+        var fps = 0;
+        var streamTimeout = null;
+        var videoStreamActive = false;
+        var autoCloseTimer = null;
+        var remainingTime = 60;
+        var countdownInterval = null;
+        
+        // MQTT broker settings
+        var host = "47.122.129.16";
+        var port = 9001;
+        var isConnected = false;
+        
+        // 页面加载时检查本地存储
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedUsername = localStorage.getItem('mqtt_username');
+            const savedPassword = localStorage.getItem('mqtt_password');
+            
+            if (savedUsername && savedPassword) {
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('password').value = savedPassword;
+                
+                // 自动尝试登录
+                setTimeout(() => {
+                    loginBtn.click();
+                }, 500);
+            }
+        });
+        
+        // 登录按钮事件
+        loginBtn.addEventListener('click', function() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                showError("请输入用户名和密码");
+                return;
+            }
+            
+            // 保存凭据到本地存储
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('mqtt_username', username);
+                localStorage.setItem('mqtt_password', password);
+            } else {
+                localStorage.removeItem('mqtt_username');
+                localStorage.removeItem('mqtt_password');
+            }
+            
+            // 尝试连接MQTT
+            connectToMQTT(username, password);
+        });
+        
+        // 退出登录
+        logoutBtn.addEventListener('click', function() {
+            if (client && client.isConnected()) {
+                client.disconnect();
+            }
+            
+            // 停止视频流
+            if (streamEnabled) {
+                stopVideoStream();
+            }
+            
+            // 重置UI
+            logoutBtn.style.display = 'none';
+            loginStatus.textContent = "未登录";
+            loginStatus.className = "login-status disconnected";
+            loginForm.style.display = 'flex';
+            errorMessage.style.display = 'none';
+            
+            // 禁用控制按钮
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+            button.disabled = true;
+            
+            // 重置MQTT状态
+            mqttStatus.classList.remove('connected');
+            mqttStatusText.textContent = "MQTT: 未连接";
+            isConnected = false;
+        });
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        function connectToMQTT(username, password) {
+            // Generate a random client ID
+            var clientId = "webClient_" + Math.random().toString(16).substr(2, 8);
+            clientIdSpan.textContent = clientId;
+            
+            // Create MQTT client
+            client = new Paho.MQTT.Client(host, port, clientId);
+            
+            // Set callback handlers
+            client.onConnectionLost = onConnectionLost;
+            client.onMessageArrived = onMessageArrived;
+            
+            // Connection options
+            var options = {
+                useSSL: false,
+                onSuccess: function() {
+                    console.log("Connected to MQTT broker");
+                    mqttStatus.classList.add('connected');
+                    mqttStatus.classList.remove('pulse');
+                    mqttStatusText.textContent = "MQTT: 已连接";
+                    client.subscribe("esp32/camera/video");
+                    
+                    // 更新登录状态
+                    loginStatus.textContent = "已登录: " + username;
+                    loginStatus.className = "login-status connected";
+                    logoutBtn.style.display = 'block';
+                    loginForm.style.display = 'none';
+                    errorMessage.style.display = 'none';
+                    isConnected = true;
+                    
+                    // 启用控制按钮
+                    document.querySelectorAll('.control-btn').forEach(btn => {
+                        btn.disabled = false;
+                    });
+                    button.disabled = false;
+                },
+                onFailure: function() {
+                    console.log("Connection failed");
+                    showError("连接失败，请检查用户名和密码");
+                    mqttStatus.classList.remove('connected');
+                    mqttStatusText.textContent = "MQTT: 连接失败";
+                },
+                userName: username,
+                password: password
+            };
+            
+            // Connect to broker
+            client.connect(options);
+        }
+        
+        function onConnectionLost(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                console.log("Connection lost: " + responseObject.errorMessage);
+                mqttStatus.classList.remove('connected');
+                mqttStatus.classList.add('pulse');
+                mqttStatusText.textContent = "MQTT: 重新连接中...";
+                isConnected = false;
+                
+                // 如果视频流处于活动状态，则停止
+                if (streamEnabled) {
+                    stopVideoStream();
+                }
+            }
+        }
+        
+        // 视频流状态检测
+        function startVideoMonitoring() {   
+            lastVideoTime = Date.now();
+            startTime = Date.now();
+            frameCount = 0;
+            videoStreamActive = true;
+            
+            // 启动视频流检测定时器
+            clearInterval(streamTimeout);
+            streamTimeout = setInterval(checkVideoStream, 1000);
+            
+            // 启动自动关闭倒计时
+            startAutoCloseCountdown();
+        }
+        
+        function stopVideoMonitoring() {
+            videoStreamActive = false;
+            clearInterval(streamTimeout);
+            stopAutoCloseCountdown();
+            
+            // 隐藏视频，显示占位符
+            video.style.display = 'none';
+            videoPlaceholder.style.display = 'flex';
+            streamWarning.style.display = 'none';
+            
+            // 重置状态
+            fpsValue.textContent = '0';
+            latencyValue.textContent = '0ms';
+            streamHealth.textContent = '离线';
+            streamHealth.style.color = '#e74c3c';
+        }
+        
+        function checkVideoStream() {
+            if (!videoStreamActive) return;
+            
+            const now = Date.now();
+            const timeDiff = now - lastVideoTime;
+            
+            // 更新FPS
+            const elapsed = (now - startTime) / 1000;
+            fps = frameCount / elapsed;
+            fpsValue.textContent = fps.toFixed(1);
+            
+            // 检查是否有新帧
+            if (timeDiff > 5000) { // 5秒无新帧
+                // 显示警告
+                streamWarning.style.display = 'block';
+                streamHealth.textContent = '中断';
+                streamHealth.style.color = '#e74c3c';
+                
+                // 隐藏视频，显示占位符
+                video.style.display = 'none';
+                videoPlaceholder.style.display = 'flex';
+                
+                // 更新状态指示器
+                streamStatus.classList.remove('connected');
+                streamStatusSpan.textContent = "视频流: 中断";
+            } else {
+                // 计算延迟
+                const latency = timeDiff > 1000 ? '>1s' : timeDiff + 'ms';
+                latencyValue.textContent = latency;
+                
+                // 根据延迟设置状态
+                if (timeDiff < 500) {
+                    streamHealth.textContent = '良好';
+                    streamHealth.style.color = '#2ecc71';
+                } else if (timeDiff < 1000) {
+                    streamHealth.textContent = '正常';
+                    streamHealth.style.color = '#f1c40f';
+                } else {
+                    streamHealth.textContent = '延迟';
+                    streamHealth.style.color = '#e67e22';
+                }
+            }
+        }
+        
+        // 自动关闭倒计时
+        function startAutoCloseCountdown() {
+            remainingTime = 60;
+            countdownText.textContent = remainingTime;
+            countdownBar.style.width = '100%';
+            
+            // 清除之前的计时器
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                remainingTime--;
+                countdownText.textContent = remainingTime;
+                
+                // 更新进度条
+                const percentage = (remainingTime / 60) * 100;
+                countdownBar.style.width = percentage + '%';
+                
+                // 最后10秒改变颜色
+                if (remainingTime <= 10) {
+                    countdownBar.style.background = '#e74c3c';
+                } else if (remainingTime <= 20) {
+                    countdownBar.style.background = '#f39c12';
+                }
+                
+                // 倒计时结束
+                if (remainingTime <= 0) {
+                    stopVideoStream();
+                }
+            }, 1000);
+        }
+        
+        function stopAutoCloseCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            countdownBar.style.width = '0%';
+            countdownBar.style.background = '#ffcc00';
+        }
+        
+        // Handle incoming messages
+        function onMessageArrived(message) {
+            if (message.destinationName === "esp32/camera/video") {
+                if (!videoStreamActive) return;
+                
+                const now = Date.now();
+                const timeDiff = now - lastVideoTime;
+                lastVideoTime = now;
+                frameCount++;
+                
+                // 更新状态
+                streamWarning.style.display = 'none';
+                streamStatus.classList.add('connected');
+                streamStatusSpan.textContent = "视频流: 活跃";
+                
+                // 显示视频
+                video.style.display = 'block';
+                videoPlaceholder.style.display = 'none';
+                
+                // 处理图像
+                var bytes = new Uint8Array(message.payloadBytes);
+                var binary = '';
+                for (var i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                var base64String = btoa(binary);
+                video.src = "data:image/jpeg;base64," + base64String;
+            }
+        }
+        
+        // Toggle stream button
+        button.addEventListener('click', function() {
+            if (button.disabled || !isConnected) return;
+            
+            streamEnabled = !streamEnabled;
+            if (streamEnabled) {
+                startVideoStream();
+            } else {
+                stopVideoStream();
+            }
+        });
+        
+        function startVideoStream() {
+            button.disabled = true;
+            btnText.textContent = "正在连接...";
+            
+            // 发送开启命令
+            sendControlCommand("on");
+            
+            // 显示占位符
+            video.style.display = 'none';
+            videoPlaceholder.style.display = 'flex';
+            videoPlaceholder.innerHTML = '<div class="icon">⏳</div><div>正在连接摄像头...</div>';
+            
+            // 设置超时检查
+            setTimeout(() => {
+                if (videoStreamActive) return;
+                
+                btnText.textContent = "开启视频流";
+                button.disabled = false;
+                videoPlaceholder.innerHTML = '<div class="icon">❌</div><div>连接失败，请重试</div>';
+                streamStatus.classList.remove('connected');
+                streamStatusSpan.textContent = "视频流: 失败";
+            }, 5000);
+        }
+        
+        function stopVideoStream() {
+            streamEnabled = false;
+            
+            // 发送关闭命令
+            sendControlCommand("off");
+            
+            // 更新UI
+            btnText.textContent = "开启视频流";
+            streamStatus.classList.remove('connected');
+            streamStatusSpan.textContent = "视频流: 关闭";
+            button.disabled = false;
+            
+            // 停止监控
+            stopVideoMonitoring();
+            
+            // 显示占位符
+            videoPlaceholder.innerHTML = '<div class="icon">📷</div><div>视频流未开启</div>';
+        }
+        
+        // Send camera control command
+        function sendControlCommand(cmd) {
+            if (client && client.isConnected()) {
+                var message = new Paho.MQTT.Message(cmd);
+                message.destinationName = "esp32-002/camera/control";
+                client.send(message);
+                
+                if (cmd === "on") {
+                    // 启动视频监控
+                    startVideoMonitoring();
+                    
+                    // 更新按钮状态
+                    setTimeout(() => {
+                        if (videoStreamActive) {
+                            btnText.textContent = "关闭视频流";
+                            button.disabled = false;
+                        }
+                    }, 1000);
+                }
+            }
+        }
+        
+       
+        
+        // 添加触摸反馈
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                if (!this.disabled) {
+                    this.style.transform = 'scale(0.95)';
+                }
+            });
+            btn.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+        
+        // 支持按Enter键登录
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

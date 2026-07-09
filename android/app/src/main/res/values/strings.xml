@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">远程门禁</string>
+    <string name="login_title">MQTT 登录</string>
+    <string name="host_hint">服务器地址</string>
+    <string name="port_hint">端口</string>
+    <string name="username_hint">用户名</string>
+    <string name="password_hint">密码</string>
+    <string name="remember_credentials">记住凭据</string>
+    <string name="login">连接</string>
+    <string name="logout">退出登录</string>
+    <string name="nav_video">监控</string>
+    <string name="nav_door">门禁</string>
+    <string name="nav_settings">设置</string>
+    <string name="start_stream">开启视频流</string>
+    <string name="stop_stream">关闭视频流</string>
+    <string name="stream_on">视频流: 开启</string>
+    <string name="stream_off">视频流: 关闭</string>
+    <string name="auto_close_countdown">%d 秒后自动关闭</string>
+    <string name="fps_label">帧率: %.1f fps</string>
+    <string name="camera_status">摄像头状态: %s</string>
+    <string name="video_placeholder">视频流未开启</string>
+    <string name="iron_door">卷帘门</string>
+    <string name="glass_door">玻璃门</string>
+    <string name="light_control">灯控</string>
+    <string name="iron_up">上升</string>
+    <string name="iron_down">下降</string>
+    <string name="iron_stop">停止</string>
+    <string name="glass_open">全开</string>
+    <string name="glass_close">关闭</string>
+    <string name="glass_in_out">双向</string>
+    <string name="glass_only_out">只出不进</string>
+    <string name="light_left">左键</string>
+    <string name="light_right">右键</string>
+</resources>
