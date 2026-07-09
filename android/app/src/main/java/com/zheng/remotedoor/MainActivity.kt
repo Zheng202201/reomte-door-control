@@ -16,22 +16,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var autoCloseTimer: CountDownTimer? = null
     private var menuExpanded = false
-    private var currentTabId: Int = R.id.nav_home
+    private var currentTabId: Int = TAB_HOME
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        currentTabId = savedInstanceState?.getInt(KEY_TAB, R.id.nav_home) ?: R.id.nav_home
+        currentTabId = savedInstanceState?.getInt(KEY_TAB, TAB_HOME) ?: TAB_HOME
         setupSideMenu()
 
         if (savedInstanceState == null) {
-            switchFragment(HomeFragment(), R.id.nav_home)
+            switchFragment(HomeFragment(), TAB_HOME)
         } else {
             when (currentTabId) {
-                R.id.nav_settings -> switchFragment(SettingsFragment(), R.id.nav_settings)
-                else -> switchFragment(HomeFragment(), R.id.nav_home)
+                TAB_SETTINGS -> switchFragment(SettingsFragment(), TAB_SETTINGS)
+                else -> switchFragment(HomeFragment(), TAB_HOME)
             }
         }
     }
@@ -40,11 +40,11 @@ class MainActivity : AppCompatActivity() {
         binding.fabMenuToggle.setOnClickListener { toggleSideMenu() }
         binding.fabNavHome.setOnClickListener {
             collapseSideMenu()
-            switchFragment(HomeFragment(), R.id.nav_home)
+            switchFragment(HomeFragment(), TAB_HOME)
         }
         binding.fabNavSettings.setOnClickListener {
             collapseSideMenu()
-            switchFragment(SettingsFragment(), R.id.nav_settings)
+            switchFragment(SettingsFragment(), TAB_SETTINGS)
         }
         updateNavHighlight()
     }
@@ -86,19 +86,19 @@ class MainActivity : AppCompatActivity() {
     private fun updateNavHighlight() {
         binding.fabNavHome.backgroundTintList = ContextCompat.getColorStateList(
             this,
-            if (currentTabId == R.id.nav_home) R.color.primary else R.color.nav_bg
+            if (currentTabId == TAB_HOME) R.color.primary else R.color.nav_bg
         )
         binding.fabNavSettings.backgroundTintList = ContextCompat.getColorStateList(
             this,
-            if (currentTabId == R.id.nav_settings) R.color.primary else R.color.nav_bg
+            if (currentTabId == TAB_SETTINGS) R.color.primary else R.color.nav_bg
         )
         binding.fabNavHome.imageTintList = ContextCompat.getColorStateList(
             this,
-            if (currentTabId == R.id.nav_home) android.R.color.white else R.color.primary
+            if (currentTabId == TAB_HOME) android.R.color.white else R.color.primary
         )
         binding.fabNavSettings.imageTintList = ContextCompat.getColorStateList(
             this,
-            if (currentTabId == R.id.nav_settings) android.R.color.white else R.color.primary
+            if (currentTabId == TAB_SETTINGS) android.R.color.white else R.color.primary
         )
     }
 
@@ -148,5 +148,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val KEY_TAB = "current_tab"
+        private const val TAB_HOME = 0
+        private const val TAB_SETTINGS = 1
     }
 }

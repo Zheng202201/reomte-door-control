@@ -13,9 +13,13 @@
         android:layout_weight="0.58"
         android:orientation="vertical">
 
-        <include layout="@layout/include_video_status" />
+        <include
+            android:id="@+id/includeVideoStatus"
+            layout="@layout/include_video_status" />
 
-        <include layout="@layout/include_video_panel" />
+        <include
+            android:id="@+id/includeVideoPanel"
+            layout="@layout/include_video_panel" />
     </LinearLayout>
 
     <ScrollView
@@ -26,6 +30,8 @@
         android:fillViewport="true"
         android:scrollbars="none">
 
-        <include layout="@layout/include_door_controls" />
+        <include
+            android:id="@+id/includeDoorControls"
+            layout="@layout/include_door_controls" />
     </ScrollView>
 </LinearLayout>

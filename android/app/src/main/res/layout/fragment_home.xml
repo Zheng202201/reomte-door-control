@@ -9,9 +9,15 @@
     android:paddingEnd="@dimen/home_padding"
     android:paddingBottom="6dp">
 
-    <include layout="@layout/include_video_status" />
+    <include
+        android:id="@+id/includeVideoStatus"
+        layout="@layout/include_video_status" />
 
-    <include layout="@layout/include_video_panel" />
+    <include
+        android:id="@+id/includeVideoPanel"
+        layout="@layout/include_video_panel" />
 
-    <include layout="@layout/include_door_controls" />
+    <include
+        android:id="@+id/includeDoorControls"
+        layout="@layout/include_door_controls" />
 </LinearLayout>

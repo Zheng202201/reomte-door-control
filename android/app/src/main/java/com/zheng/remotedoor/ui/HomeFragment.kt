@@ -52,7 +52,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupVideoAspectRatio() {
-        val container = binding()?.videoContainer ?: return
+        val container = binding()?.includeVideoPanel?.videoContainer ?: return
         container.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
             if (right - left != oldRight - oldLeft) {
                 updateVideoContainerSize(right - left)
@@ -65,7 +65,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun resolveContainerWidth(): Int {
-        val container = binding()?.videoContainer ?: return 0
+        val container = binding()?.includeVideoPanel?.videoContainer ?: return 0
         if (container.width > 0) return container.width
 
         val root = binding()?.root ?: return 0
@@ -86,7 +86,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateVideoContainerSize(width: Int = resolveContainerWidth()) {
-        val container = binding()?.videoContainer ?: return
+        val container = binding()?.includeVideoPanel?.videoContainer ?: return
         if (width <= 0) return
         val targetHeight = (width * VIDEO_HEIGHT.toFloat() / VIDEO_WIDTH).toInt()
         val lp = container.layoutParams
@@ -97,7 +97,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupStreamControls() {
-        binding()?.fabToggleStream?.setOnClickListener {
+        binding()?.includeVideoPanel?.fabToggleStream?.setOnClickListener {
             val enabled = !mqttManager.streamEnabled.value
             if (enabled) {
                 streamStartTime = System.currentTimeMillis()
@@ -107,7 +107,7 @@ class HomeFragment : Fragment() {
                 (activity as? MainActivity)?.startAutoCloseTimer(
                     seconds = 60,
                     onTick = { sec ->
-                        binding()?.tvCountdown?.apply {
+                        binding()?.includeVideoPanel?.tvCountdown?.apply {
                             text = getString(R.string.auto_close_countdown, sec)
                             visibility = View.VISIBLE
                         }
@@ -122,17 +122,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupDoorControls() {
-        val b = binding() ?: return
+        val d = binding()?.includeDoorControls ?: return
         val doorCommands = mapOf(
-            b.btnIronUp to "iron_up",
-            b.btnIronDown to "iron_down",
-            b.btnIronStop to "iron_stop",
-            b.btnGlassOpen to "glass_open",
-            b.btnGlassClose to "glass_close",
-            b.btnGlassInOut to "glass_in_out",
-            b.btnGlassOnlyOut to "glass_only_out",
-            b.btnLightLeft to "light_left",
-            b.btnLightRight to "light_right"
+            d.btnIronUp to "iron_up",
+            d.btnIronDown to "iron_down",
+            d.btnIronStop to "iron_stop",
+            d.btnGlassOpen to "glass_open",
+            d.btnGlassClose to "glass_close",
+            d.btnGlassInOut to "glass_in_out",
+            d.btnGlassOnlyOut to "glass_only_out",
+            d.btnLightLeft to "light_left",
+            d.btnLightRight to "light_right"
         )
 
         doorCommands.forEach { (button, command) ->
@@ -152,7 +152,7 @@ class HomeFragment : Fragment() {
                 mqttManager.streamEnabled.collect { enabled ->
                     updateStreamFab(enabled)
                     if (!enabled) {
-                        binding()?.tvCountdown?.visibility = View.GONE
+                        binding()?.includeVideoPanel?.tvCountdown?.visibility = View.GONE
                         hasReceivedFrame = false
                         clearVideoDisplay()
                         updateStreamUi(enabled = false, waiting = false)
@@ -187,7 +187,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateStreamFab(enabled: Boolean) {
-        val fab = binding()?.fabToggleStream ?: return
+        val fab = binding()?.includeVideoPanel?.fabToggleStream ?: return
         if (enabled) {
             fab.setImageResource(R.drawable.ic_stream_stop)
             fab.backgroundTintList =
@@ -202,64 +202,64 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateFps() {
-        val b = binding() ?: return
+        val status = binding()?.includeVideoStatus ?: return
         if (!mqttManager.streamEnabled.value) {
-            b.tvFps.text = getString(R.string.fps_idle)
-            b.tvFps.setTextColor(color(R.color.stream_inactive))
+            status.tvFps.text = getString(R.string.fps_idle)
+            status.tvFps.setTextColor(color(R.color.stream_inactive))
             return
         }
         val elapsed = (System.currentTimeMillis() - streamStartTime) / 1000.0
         val fps = if (elapsed > 0) mqttManager.frameCount.value / elapsed else 0.0
-        b.tvFps.text = getString(R.string.fps_label, fps)
+        status.tvFps.text = getString(R.string.fps_label, fps)
         val fpsColor = when {
             fps >= 2.0 -> R.color.stream_active
             fps > 0.0 -> R.color.stream_waiting
             else -> R.color.stream_waiting
         }
-        b.tvFps.setTextColor(color(fpsColor))
+        status.tvFps.setTextColor(color(fpsColor))
     }
 
     private fun updateStreamUi(enabled: Boolean, waiting: Boolean) {
-        val b = binding() ?: return
+        val status = binding()?.includeVideoStatus ?: return
         when {
             !enabled -> {
-                b.tvStreamStatus.text = getString(R.string.stream_off)
-                b.tvStreamStatus.setTextColor(color(R.color.stream_inactive))
-                b.tvFps.text = getString(R.string.fps_idle)
-                b.tvFps.setTextColor(color(R.color.stream_inactive))
+                status.tvStreamStatus.text = getString(R.string.stream_off)
+                status.tvStreamStatus.setTextColor(color(R.color.stream_inactive))
+                status.tvFps.text = getString(R.string.fps_idle)
+                status.tvFps.setTextColor(color(R.color.stream_inactive))
             }
             waiting -> {
-                b.tvStreamStatus.text = getString(R.string.stream_waiting)
-                b.tvStreamStatus.setTextColor(color(R.color.stream_waiting))
+                status.tvStreamStatus.text = getString(R.string.stream_waiting)
+                status.tvStreamStatus.setTextColor(color(R.color.stream_waiting))
                 updateFps()
             }
             else -> {
-                b.tvStreamStatus.text = getString(R.string.stream_on)
-                b.tvStreamStatus.setTextColor(color(R.color.stream_active))
+                status.tvStreamStatus.text = getString(R.string.stream_on)
+                status.tvStreamStatus.setTextColor(color(R.color.stream_active))
                 updateFps()
             }
         }
     }
 
     private fun showVideoFrame(bitmap: Bitmap) {
-        val b = binding() ?: return
-        b.ivVideo.setImageBitmap(bitmap)
-        b.ivVideo.visibility = View.VISIBLE
-        b.tvPlaceholder.visibility = View.GONE
+        val video = binding()?.includeVideoPanel ?: return
+        video.ivVideo.setImageBitmap(bitmap)
+        video.ivVideo.visibility = View.VISIBLE
+        video.tvPlaceholder.visibility = View.GONE
     }
 
     private fun clearVideoDisplay() {
-        val b = binding() ?: return
-        b.ivVideo.setImageDrawable(null)
-        b.ivVideo.visibility = View.GONE
-        b.tvPlaceholder.visibility = View.VISIBLE
-        b.tvPlaceholder.text = getString(R.string.video_placeholder)
+        val video = binding()?.includeVideoPanel ?: return
+        video.ivVideo.setImageDrawable(null)
+        video.ivVideo.visibility = View.GONE
+        video.tvPlaceholder.visibility = View.VISIBLE
+        video.tvPlaceholder.text = getString(R.string.video_placeholder)
     }
 
     private fun restoreCurrentState() {
         val enabled = mqttManager.streamEnabled.value
         updateStreamFab(enabled)
-        binding()?.tvCountdown?.visibility = if (enabled) View.VISIBLE else View.GONE
+        binding()?.includeVideoPanel?.tvCountdown?.visibility = if (enabled) View.VISIBLE else View.GONE
 
         if (enabled) {
             streamStartTime = System.currentTimeMillis()
