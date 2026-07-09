@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -52,31 +53,44 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupVideoAspectRatio() {
-        val container = binding()?.includeVideoPanel?.videoContainer ?: return
-        container.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
-            if (right - left != oldRight - oldLeft) {
-                updateVideoContainerSize(right - left)
+        val panel = binding()?.includeVideoPanel?.root ?: return
+        panel.addOnLayoutChangeListener { _, left, _, right, _, _, _, _, _ ->
+            val width = right - left
+            if (width > 0) {
+                updateVideoContainerSize(width)
             }
         }
     }
 
     private fun applyInitialVideoHeight() {
-        binding()?.root?.post { updateVideoContainerSize() }
+        val root = binding()?.root ?: return
+        root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                root.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                updateVideoContainerSize()
+            }
+        })
+        root.post { updateVideoContainerSize() }
     }
 
     private fun resolveContainerWidth(): Int {
-        val container = binding()?.includeVideoPanel?.videoContainer ?: return 0
-        if (container.width > 0) return container.width
-
         val root = binding()?.root ?: return 0
+        val panel = binding()?.includeVideoPanel?.root
         val horizontalPadding = root.paddingLeft + root.paddingRight
-        if (root.width > 0) {
-            return root.width - horizontalPadding
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        panel?.width?.takeIf { it > 0 }?.let { return it }
+
+        if (isLandscape) {
+            val videoSection = root.findViewById<View>(R.id.videoSection)
+            videoSection?.width?.takeIf { it > 0 }?.let { return it }
         }
 
-        val dm = resources.displayMetrics
-        val screenWidth = dm.widthPixels
-        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        root.width.takeIf { it > 0 }?.let {
+            return it - horizontalPadding
+        }
+
+        val screenWidth = resources.displayMetrics.widthPixels
         val contentWidth = screenWidth - horizontalPadding
         return if (isLandscape) {
             (contentWidth * LANDSCAPE_VIDEO_WEIGHT).toInt()
@@ -86,13 +100,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateVideoContainerSize(width: Int = resolveContainerWidth()) {
-        val container = binding()?.includeVideoPanel?.videoContainer ?: return
+        val panel = binding()?.includeVideoPanel?.root ?: return
         if (width <= 0) return
         val targetHeight = (width * VIDEO_HEIGHT.toFloat() / VIDEO_WIDTH).toInt()
-        val lp = container.layoutParams
+        val lp = panel.layoutParams
         if (lp.height != targetHeight) {
             lp.height = targetHeight
-            container.layoutParams = lp
+            panel.layoutParams = lp
         }
     }
 

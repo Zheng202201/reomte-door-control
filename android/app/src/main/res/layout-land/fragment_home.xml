@@ -19,7 +19,9 @@
 
         <include
             android:id="@+id/includeVideoPanel"
-            layout="@layout/include_video_panel" />
+            layout="@layout/include_video_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <ScrollView

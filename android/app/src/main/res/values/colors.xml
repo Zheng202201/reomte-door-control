@@ -17,4 +17,5 @@
     <color name="login_input_stroke">#D7CCC8</color>
     <color name="fab_stream_on">#D84315</color>
     <color name="fab_stream_off">#E67E22</color>
+    <color name="menu_toggle_bg">#B8CA6F1E</color>
 </resources>

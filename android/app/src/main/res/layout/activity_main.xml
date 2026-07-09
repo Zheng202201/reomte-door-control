@@ -14,21 +14,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/menuPositionGuide"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.33" />
-
     <LinearLayout
         android:id="@+id/sideMenuContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="20dp"
+        android:gravity="bottom"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/menuPositionGuide">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:id="@+id/sideMenuItems"
@@ -67,9 +62,9 @@
             android:id="@+id/fabMenuToggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:alpha="0.72"
             android:contentDescription="@string/nav_toggle"
-            app:backgroundTint="@color/primary_dark"
+            app:backgroundTint="@color/menu_toggle_bg"
             app:fabCustomSize="40dp"
             app:maxImageSize="20dp"
             app:srcCompat="@drawable/ic_nav_arrow_left"
