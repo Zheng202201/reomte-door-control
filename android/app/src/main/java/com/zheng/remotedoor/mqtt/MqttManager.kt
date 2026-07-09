@@ -55,10 +55,7 @@ class MqttManager {
                     .identifier(clientId)
                     .serverHost(host)
                     .serverPort(port)
-                    .automaticReconnect()
-                    .initialDelay(2, TimeUnit.SECONDS)
-                    .maxDelay(30, TimeUnit.SECONDS)
-                    .applyAutomaticReconnect()
+                    .automaticReconnectWithDefaultConfig()
                     .buildAsync()
 
                 val connAck: Mqtt3ConnAck = mqttClient.connectWith()

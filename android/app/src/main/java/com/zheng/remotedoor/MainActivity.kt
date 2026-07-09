@@ -7,7 +7,6 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.zheng.remotedoor.databinding.ActivityMainBinding
 import com.zheng.remotedoor.ui.DoorControlFragment
 import com.zheng.remotedoor.ui.SettingsFragment
