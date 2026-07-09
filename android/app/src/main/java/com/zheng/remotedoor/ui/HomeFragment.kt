@@ -1,6 +1,5 @@
 package com.zheng.remotedoor.ui
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,6 +19,11 @@ import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
+    companion object {
+        private const val VIDEO_WIDTH = 640
+        private const val VIDEO_HEIGHT = 480
+    }
+
     private var _binding: FragmentHomeBinding? = null
     private val mqttManager get() = RemoteDoorApp.instance.mqttManager
 
@@ -37,10 +41,30 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupVideoAspectRatio()
         setupStreamControls()
         setupDoorControls()
         observeMqttState()
         restoreCurrentState()
+    }
+
+    private fun setupVideoAspectRatio() {
+        val container = binding()?.videoContainer ?: return
+        container.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            updateVideoContainerSize(v.width)
+        }
+        container.post { updateVideoContainerSize(container.width) }
+    }
+
+    private fun updateVideoContainerSize(width: Int = binding()?.videoContainer?.width ?: 0) {
+        val container = binding()?.videoContainer ?: return
+        if (width <= 0) return
+        val targetHeight = (width * VIDEO_HEIGHT.toFloat() / VIDEO_WIDTH).toInt()
+        val lp = container.layoutParams
+        if (lp.height != targetHeight) {
+            lp.height = targetHeight
+            container.layoutParams = lp
+        }
     }
 
     private fun setupStreamControls() {
