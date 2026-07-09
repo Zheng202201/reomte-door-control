@@ -3,8 +3,6 @@ package com.zheng.remotedoor
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.view.Menu
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.zheng.remotedoor.databinding.ActivityMainBinding
@@ -15,16 +13,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var autoCloseTimer: CountDownTimer? = null
-
     private var currentTabId: Int = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.title = getString(R.string.app_name)
 
         if (savedInstanceState == null) {
             switchFragment(HomeFragment())
@@ -39,6 +33,13 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+    }
+
+    fun logout() {
+        RemoteDoorApp.instance.mqttManager.disconnect()
+        cancelAutoCloseTimer()
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
     }
 
     private fun switchFragment(fragment: Fragment): Boolean {
@@ -64,24 +65,6 @@ class MainActivity : AppCompatActivity() {
     fun cancelAutoCloseTimer() {
         autoCloseTimer?.cancel()
         autoCloseTimer = null
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_logout -> {
-                RemoteDoorApp.instance.mqttManager.disconnect()
-                cancelAutoCloseTimer()
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
     override fun onDestroy() {

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.zheng.remotedoor.MainActivity
 import com.zheng.remotedoor.MqttConfig
 import com.zheng.remotedoor.RemoteDoorApp
 import com.zheng.remotedoor.databinding.FragmentSettingsBinding
@@ -38,6 +39,10 @@ class SettingsFragment : Fragment() {
             append("视频: ${MqttConfig.TOPIC_VIDEO}\n")
             append("门控: ${MqttConfig.TOPIC_DOOR_CONTROL}\n")
             append("灯控: ${MqttConfig.TOPIC_LIGHT_CONTROL}")
+        }
+
+        binding.btnLogout.setOnClickListener {
+            (activity as? MainActivity)?.logout()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

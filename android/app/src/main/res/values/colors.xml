@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#3498DB</color>
-    <color name="primary_dark">#1A2A6C</color>
-    <color name="iron_red">#E74C3C</color>
-    <color name="glass_green">#2ECC71</color>
-    <color name="bg_dark">#1E2A3A</color>
-    <color name="stream_active">#2ECC71</color>
-    <color name="stream_inactive">#95A5A6</color>
-    <color name="stream_waiting">#F39C12</color>
-    <color name="login_hint">#B0BEC5</color>
-    <color name="login_input_stroke">#546E7A</color>
+    <color name="primary">#E67E22</color>
+    <color name="primary_dark">#CA6F1E</color>
+    <color name="iron_red">#D84315</color>
+    <color name="glass_green">#2E7D52</color>
+    <color name="bg_dark">#FFF5EB</color>
+    <color name="bg_card">#FFECD9</color>
+    <color name="nav_bg">#FFE8D6</color>
+    <color name="text_primary">#5D4037</color>
+    <color name="text_secondary">#8D6E63</color>
+    <color name="video_bg">#4A3728</color>
+    <color name="stream_active">#2E7D52</color>
+    <color name="stream_inactive">#A1887F</color>
+    <color name="stream_waiting">#EF6C00</color>
+    <color name="login_hint">#A1887F</color>
+    <color name="login_input_stroke">#D7CCC8</color>
+    <color name="fab_stream_on">#D84315</color>
+    <color name="fab_stream_off">#E67E22</color>
 </resources>

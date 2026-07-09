@@ -1,5 +1,6 @@
 package com.zheng.remotedoor.ui
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -43,7 +44,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupStreamControls() {
-        binding()?.btnToggleStream?.setOnClickListener {
+        binding()?.fabToggleStream?.setOnClickListener {
             val enabled = !mqttManager.streamEnabled.value
             if (enabled) {
                 streamStartTime = System.currentTimeMillis()
@@ -52,7 +53,12 @@ class HomeFragment : Fragment() {
                 updateStreamUi(enabled = true, waiting = true)
                 (activity as? MainActivity)?.startAutoCloseTimer(
                     seconds = 60,
-                    onTick = { sec -> binding()?.tvCountdown?.text = getString(R.string.auto_close_countdown, sec) },
+                    onTick = { sec ->
+                        binding()?.tvCountdown?.apply {
+                            text = getString(R.string.auto_close_countdown, sec)
+                            visibility = View.VISIBLE
+                        }
+                    },
                     onFinish = { mqttManager.setStreamEnabled(false) }
                 )
             } else {
@@ -77,7 +83,7 @@ class HomeFragment : Fragment() {
         )
 
         doorCommands.forEach { (button, command) ->
-            button?.setOnClickListener {
+            button.setOnClickListener {
                 when (command) {
                     "light_left", "light_right" -> mqttManager.sendLightCommand(command)
                     else -> mqttManager.sendDoorCommand(command)
@@ -91,10 +97,9 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mqttManager.streamEnabled.collect { enabled ->
-                    binding()?.btnToggleStream?.text =
-                        if (enabled) getString(R.string.stop_stream) else getString(R.string.start_stream)
-                    binding()?.tvCountdown?.visibility = if (enabled) View.VISIBLE else View.GONE
+                    updateStreamFab(enabled)
                     if (!enabled) {
+                        binding()?.tvCountdown?.visibility = View.GONE
                         hasReceivedFrame = false
                         clearVideoDisplay()
                         updateStreamUi(enabled = false, waiting = false)
@@ -123,10 +128,23 @@ class HomeFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mqttManager.frameCount.collect {
-                    updateFps()
-                }
+                mqttManager.frameCount.collect { updateFps() }
             }
+        }
+    }
+
+    private fun updateStreamFab(enabled: Boolean) {
+        val fab = binding()?.fabToggleStream ?: return
+        if (enabled) {
+            fab.setImageResource(R.drawable.ic_stream_stop)
+            fab.backgroundTintList =
+                ContextCompat.getColorStateList(requireContext(), R.color.fab_stream_on)
+            fab.contentDescription = getString(R.string.stop_stream)
+        } else {
+            fab.setImageResource(R.drawable.ic_stream_play)
+            fab.backgroundTintList =
+                ContextCompat.getColorStateList(requireContext(), R.color.fab_stream_off)
+            fab.contentDescription = getString(R.string.start_stream)
         }
     }
 
@@ -187,8 +205,7 @@ class HomeFragment : Fragment() {
 
     private fun restoreCurrentState() {
         val enabled = mqttManager.streamEnabled.value
-        binding()?.btnToggleStream?.text =
-            if (enabled) getString(R.string.stop_stream) else getString(R.string.start_stream)
+        updateStreamFab(enabled)
         binding()?.tvCountdown?.visibility = if (enabled) View.VISIBLE else View.GONE
 
         if (enabled) {

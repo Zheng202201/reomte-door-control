@@ -23,7 +23,13 @@
     <string name="fps_label">帧率: %.1f fps</string>
     <string name="camera_status">摄像头状态: %s</string>
     <string name="video_placeholder">视频流未开启</string>
-    <string name="iron_door">卷帘门</string>
+    <string name="iron_short">卷帘</string>
+    <string name="glass_short">玻璃</string>
+    <string name="light_short">灯控</string>
+    <string name="glass_open_short">全开</string>
+    <string name="glass_close_short">关闭</string>
+    <string name="glass_in_out_short">双向</string>
+    <string name="glass_only_out_short">只出</string>
     <string name="glass_door">玻璃门</string>
     <string name="light_control">灯控</string>
     <string name="iron_up">上升</string>
