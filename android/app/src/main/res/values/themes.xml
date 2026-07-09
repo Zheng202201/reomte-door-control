@@ -24,6 +24,12 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="SettingsSectionTitle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_dark</item>
+    </style>
+
     <style name="LoginTextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="hintTextColor">@color/login_hint</item>
         <item name="boxStrokeColor">@color/login_input_stroke</item>

@@ -4,14 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.zheng.remotedoor.MainActivity
 import com.zheng.remotedoor.MqttConfig
+import com.zheng.remotedoor.R
 import com.zheng.remotedoor.RemoteDoorApp
 import com.zheng.remotedoor.databinding.FragmentSettingsBinding
+import com.zheng.remotedoor.databinding.IncludeSettingsRowBinding
 import com.zheng.remotedoor.mqtt.MqttManager
 import kotlinx.coroutines.launch
 
@@ -33,29 +36,89 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.tvServerInfo.text = buildString {
-            append("MQTT: ${prefs.mqttHost}:${prefs.mqttPort}\n")
-            append("视频: ${MqttConfig.TOPIC_VIDEO}\n")
-            append("门控: ${MqttConfig.TOPIC_DOOR_CONTROL}\n")
-            append("灯控: ${MqttConfig.TOPIC_LIGHT_CONTROL}")
-        }
-
+        bindAccountInfo()
+        bindTopicInfo()
         binding.btnLogout.setOnClickListener {
             (activity as? MainActivity)?.logout()
         }
+        observeConnectionState()
+    }
 
+    private fun bindAccountInfo() {
+        bindRow(
+            binding.rowUsername,
+            getString(R.string.settings_label_username),
+            prefs.username.ifBlank { getString(R.string.settings_value_empty) }
+        )
+        bindRow(
+            binding.rowPassword,
+            getString(R.string.settings_label_password),
+            if (prefs.password.isNotBlank()) {
+                getString(R.string.settings_password_masked)
+            } else {
+                getString(R.string.settings_value_empty)
+            }
+        )
+        bindRow(
+            binding.rowServer,
+            getString(R.string.settings_label_server),
+            "${prefs.mqttHost}:${prefs.mqttPort}"
+        )
+    }
+
+    private fun bindTopicInfo() {
+        bindRow(
+            binding.rowTopicVideo,
+            getString(R.string.settings_label_topic_video),
+            MqttConfig.TOPIC_VIDEO
+        )
+        bindRow(
+            binding.rowTopicDoor,
+            getString(R.string.settings_label_topic_door),
+            MqttConfig.TOPIC_DOOR_CONTROL
+        )
+        bindRow(
+            binding.rowTopicLight,
+            getString(R.string.settings_label_topic_light),
+            MqttConfig.TOPIC_LIGHT_CONTROL
+        )
+    }
+
+    private fun bindRow(
+        row: IncludeSettingsRowBinding,
+        label: String,
+        value: String
+    ) {
+        row.tvLabel.text = label
+        row.tvValue.text = value
+    }
+
+    private fun observeConnectionState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mqttManager.connectionState.collect { state ->
-                    binding.tvConnectionState.text = when (state) {
-                        MqttManager.ConnectionState.CONNECTED -> "已连接"
-                        MqttManager.ConnectionState.CONNECTING -> "连接中..."
-                        MqttManager.ConnectionState.DISCONNECTED -> "未连接"
-                    }
+                    updateConnectionState(state)
                 }
             }
         }
+    }
+
+    private fun updateConnectionState(state: MqttManager.ConnectionState) {
+        val (text, colorRes) = when (state) {
+            MqttManager.ConnectionState.CONNECTED -> {
+                getString(R.string.settings_state_connected) to R.color.stream_active
+            }
+            MqttManager.ConnectionState.CONNECTING -> {
+                getString(R.string.settings_state_connecting) to R.color.stream_waiting
+            }
+            MqttManager.ConnectionState.DISCONNECTED -> {
+                getString(R.string.settings_state_disconnected) to R.color.stream_inactive
+            }
+        }
+        binding.tvConnectionState.text = text
+        binding.tvConnectionState.setTextColor(
+            ContextCompat.getColor(requireContext(), colorRes)
+        )
     }
 
     override fun onDestroyView() {
