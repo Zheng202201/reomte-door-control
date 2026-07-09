@@ -82,7 +82,28 @@ git diff
 
 ---
 
-### 第 3 步：添加并提交改动
+### 第 3 步：更新版本号（每次发布新版本时）
+
+编辑 `android/app/build.gradle.kts`，修改这两行：
+
+```kotlin
+versionCode = 2        // 每次发布 +1（整数）
+versionName = "1.0.1"  // 显示给用户看的版本号
+```
+
+**说明**：
+- `versionCode` 必须比上一版大，否则无法覆盖安装
+- `versionName` 会出现在 APK 文件名中
+
+打包后的 APK 文件名示例：
+
+```
+remote-door-v1.0.1-b2-debug.apk
+```
+
+---
+
+### 第 4 步：添加并提交改动
 
 ```bash
 git add .
@@ -101,7 +122,7 @@ git commit -m "这里写本次修改的简要说明"
 
 ---
 
-### 第 4 步：推送到 GitHub
+### 第 5 步：推送到 GitHub
 
 ```bash
 git push origin main
@@ -134,8 +155,8 @@ https://github.com/Zheng202201/reomte-door-control/actions
 
 1. 点击**最新一次成功的构建**
 2. 滚动到页面底部 **Artifacts**
-3. 下载 **remote-door-debug-apk**
-4. 解压得到 `app-debug.apk`，传到手机安装
+3. 下载带版本号的压缩包，例如 **remote-door-v1.0.0-b1**
+4. 解压得到 `remote-door-v1.0.0-b1-debug.apk`，传到手机安装
 
 ### 4. 手动触发构建（不修改代码时）
 
@@ -167,8 +188,9 @@ https://github.com/Zheng202201/reomte-door-control/actions
 ```bash
 cd /h/learn/ESP32/ArdunoIDE_Projects/remote_door_control_v03
 git status
+# 先改 android/app/build.gradle.kts 里的 versionCode / versionName
 git add .
-git commit -m "Update android app"
+git commit -m "Update android app v1.0.1"
 git push origin main
 ```
 

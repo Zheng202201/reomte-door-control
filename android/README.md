@@ -62,13 +62,14 @@ git push -u origin main
 1. 打开仓库 → **Actions** 标签
 2. 选择 **Build Android APK** workflow
 3. 等待构建完成（约 5–10 分钟）
-4. 在 Artifacts 中下载 `remote-door-debug-apk`
+4. 在 Artifacts 中下载带版本号的包，例如 `remote-door-v1.0.0-b1`
+5. 解压得到 `remote-door-v1.0.0-b1-debug.apk`
 
 也可手动触发：Actions → Build Android APK → **Run workflow**
 
 ### 5. 安装到手机
 
-1. 将 `app-debug.apk` 传到手机
+1. 将 `remote-door-vx.x.x-bN-debug.apk` 传到手机
 2. 允许「未知来源」安装
 3. 安装并打开 App
 
