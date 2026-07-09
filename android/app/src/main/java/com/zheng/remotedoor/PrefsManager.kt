@@ -28,8 +28,12 @@ class PrefsManager(context: Context) {
         get() = prefs.getBoolean(KEY_REMEMBER, true)
         set(value) = prefs.edit().putBoolean(KEY_REMEMBER, value).apply()
 
+    var autoLoginEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_LOGIN, true)
+        set(value) = prefs.edit().putBoolean(KEY_AUTO_LOGIN, value).apply()
+
     fun hasSavedCredentials(): Boolean =
-        username.isNotBlank() && password.isNotBlank()
+        autoLoginEnabled && username.isNotBlank() && password.isNotBlank()
 
     fun saveLoginCredentials(host: String, port: Int, user: String, pass: String) {
         mqttHost = host
@@ -37,6 +41,11 @@ class PrefsManager(context: Context) {
         username = user
         password = pass
         rememberCredentials = true
+        autoLoginEnabled = true
+    }
+
+    fun markManualLogout() {
+        autoLoginEnabled = false
     }
 
     fun clearCredentials() {
@@ -52,5 +61,6 @@ class PrefsManager(context: Context) {
         private const val KEY_USERNAME = "mqtt_username"
         private const val KEY_PASSWORD = "mqtt_password"
         private const val KEY_REMEMBER = "remember_credentials"
+        private const val KEY_AUTO_LOGIN = "auto_login_enabled"
     }
 }

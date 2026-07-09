@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun logout() {
+        RemoteDoorApp.instance.prefsManager.markManualLogout()
         RemoteDoorApp.instance.mqttManager.disconnect()
         cancelAutoCloseTimer()
         startActivity(Intent(this, LoginActivity::class.java))

@@ -2,6 +2,7 @@ package com.zheng.remotedoor.mqtt
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
@@ -92,8 +93,12 @@ class MqttManager {
                 if (payload.isNotEmpty()) {
                     val bitmap = BitmapFactory.decodeByteArray(payload, 0, payload.size)
                     if (bitmap != null) {
+                        val flipped = flipHorizontally(bitmap)
+                        if (flipped !== bitmap) {
+                            bitmap.recycle()
+                        }
                         _latestFrame.value?.recycle()
-                        _latestFrame.value = bitmap
+                        _latestFrame.value = flipped
                         _frameCount.value = _frameCount.value + 1
                     }
                 }
@@ -165,6 +170,13 @@ class MqttManager {
             _latestFrame.value = null
             _frameCount.value = 0
         }
+    }
+
+    private fun flipHorizontally(source: Bitmap): Bitmap {
+        val matrix = Matrix().apply {
+            preScale(-1f, 1f, source.width / 2f, source.height / 2f)
+        }
+        return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
     }
 
     enum class ConnectionState {
