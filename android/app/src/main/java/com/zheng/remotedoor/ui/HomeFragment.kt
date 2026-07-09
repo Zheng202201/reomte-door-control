@@ -112,26 +112,57 @@ class HomeFragment : Fragment() {
 
     private fun setupStreamControls() {
         binding()?.includeVideoPanel?.fabToggleStream?.setOnClickListener {
-            val enabled = !mqttManager.streamEnabled.value
-            if (enabled) {
-                streamStartTime = System.currentTimeMillis()
-                hasReceivedFrame = false
-                mqttManager.setStreamEnabled(true)
-                updateStreamUi(enabled = true, waiting = true)
-                (activity as? MainActivity)?.startAutoCloseTimer(
-                    seconds = 60,
-                    onTick = { sec ->
-                        binding()?.includeVideoPanel?.tvCountdown?.apply {
-                            text = getString(R.string.auto_close_countdown, sec)
-                            visibility = View.VISIBLE
-                        }
-                    },
-                    onFinish = { mqttManager.setStreamEnabled(false) }
-                )
-            } else {
-                mqttManager.setStreamEnabled(false)
-                (activity as? MainActivity)?.cancelAutoCloseTimer()
+            if (mqttManager.streamEnabled.value) {
+                stopVideoStream()
+                return@setOnClickListener
             }
+            startVideoStream()
+        }
+    }
+
+    private fun startVideoStream() {
+        val fab = binding()?.includeVideoPanel?.fabToggleStream ?: return
+        fab.isEnabled = false
+        updateStreamUi(enabled = true, waiting = true)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val connected = mqttManager.ensureConnected()
+            if (!connected) {
+                fab.isEnabled = true
+                updateStreamUi(enabled = false, waiting = false)
+                val message = mqttManager.lastError.value ?: getString(R.string.mqtt_reconnect_failed)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val success = mqttManager.setStreamEnabled(true)
+            fab.isEnabled = true
+            if (!success) {
+                updateStreamUi(enabled = false, waiting = false)
+                val message = mqttManager.lastError.value ?: getString(R.string.mqtt_stream_failed)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            streamStartTime = System.currentTimeMillis()
+            hasReceivedFrame = false
+            (activity as? MainActivity)?.startAutoCloseTimer(
+                seconds = 60,
+                onTick = { sec ->
+                    binding()?.includeVideoPanel?.tvCountdown?.apply {
+                        text = getString(R.string.auto_close_countdown, sec)
+                        visibility = View.VISIBLE
+                    }
+                },
+                onFinish = { stopVideoStream() }
+            )
+        }
+    }
+
+    private fun stopVideoStream() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            mqttManager.setStreamEnabled(false)
+            (activity as? MainActivity)?.cancelAutoCloseTimer()
         }
     }
 
@@ -170,6 +201,7 @@ class HomeFragment : Fragment() {
                         hasReceivedFrame = false
                         clearVideoDisplay()
                         updateStreamUi(enabled = false, waiting = false)
+                        (activity as? MainActivity)?.cancelAutoCloseTimer()
                     } else if (!hasReceivedFrame) {
                         updateStreamUi(enabled = true, waiting = true)
                     }

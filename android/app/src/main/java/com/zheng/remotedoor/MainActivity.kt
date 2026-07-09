@@ -7,9 +7,11 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.zheng.remotedoor.databinding.ActivityMainBinding
 import com.zheng.remotedoor.ui.HomeFragment
 import com.zheng.remotedoor.ui.SettingsFragment
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -134,6 +136,13 @@ class MainActivity : AppCompatActivity() {
     fun cancelAutoCloseTimer() {
         autoCloseTimer?.cancel()
         autoCloseTimer = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            RemoteDoorApp.instance.mqttManager.ensureConnected()
+        }
     }
 
     override fun onDestroy() {
