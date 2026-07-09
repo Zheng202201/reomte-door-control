@@ -87,10 +87,12 @@ class MqttManager {
             .topicFilter(MqttConfig.TOPIC_VIDEO)
             .qos(MqttQos.AT_MOST_ONCE)
             .callback { publish ->
+                if (!_streamEnabled.value) return@callback
                 val payload = publish.payloadAsBytes
                 if (payload.isNotEmpty()) {
                     val bitmap = BitmapFactory.decodeByteArray(payload, 0, payload.size)
                     if (bitmap != null) {
+                        _latestFrame.value?.recycle()
                         _latestFrame.value = bitmap
                         _frameCount.value = _frameCount.value + 1
                     }
@@ -112,6 +114,7 @@ class MqttManager {
             publish(MqttConfig.TOPIC_VIDEO_CONTROL, if (enabled) "on" else "off")
             _streamEnabled.value = enabled
             if (!enabled) {
+                _latestFrame.value?.recycle()
                 _latestFrame.value = null
                 _frameCount.value = 0
             }
@@ -158,6 +161,7 @@ class MqttManager {
             client = null
             _connectionState.value = ConnectionState.DISCONNECTED
             _streamEnabled.value = false
+            _latestFrame.value?.recycle()
             _latestFrame.value = null
             _frameCount.value = 0
         }

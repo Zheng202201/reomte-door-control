@@ -8,14 +8,15 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.zheng.remotedoor.databinding.ActivityMainBinding
-import com.zheng.remotedoor.ui.DoorControlFragment
+import com.zheng.remotedoor.ui.HomeFragment
 import com.zheng.remotedoor.ui.SettingsFragment
-import com.zheng.remotedoor.ui.VideoMonitorFragment
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var autoCloseTimer: CountDownTimer? = null
+
+    private var currentTabId: Int = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,13 +27,14 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = getString(R.string.app_name)
 
         if (savedInstanceState == null) {
-            switchFragment(VideoMonitorFragment())
+            switchFragment(HomeFragment())
         }
 
         binding.bottomNav.setOnItemSelectedListener { item ->
+            if (item.itemId == currentTabId) return@setOnItemSelectedListener true
+            currentTabId = item.itemId
             when (item.itemId) {
-                R.id.nav_video -> switchFragment(VideoMonitorFragment())
-                R.id.nav_door -> switchFragment(DoorControlFragment())
+                R.id.nav_home -> switchFragment(HomeFragment())
                 R.id.nav_settings -> switchFragment(SettingsFragment())
                 else -> false
             }

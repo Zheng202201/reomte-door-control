@@ -5,4 +5,7 @@
     <color name="iron_red">#E74C3C</color>
     <color name="glass_green">#2ECC71</color>
     <color name="bg_dark">#1E2A3A</color>
+    <color name="stream_active">#2ECC71</color>
+    <color name="stream_inactive">#95A5A6</color>
+    <color name="stream_waiting">#F39C12</color>
 </resources>
