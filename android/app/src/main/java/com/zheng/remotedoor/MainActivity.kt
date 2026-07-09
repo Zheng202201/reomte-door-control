@@ -3,7 +3,9 @@ package com.zheng.remotedoor
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.zheng.remotedoor.databinding.ActivityMainBinding
 import com.zheng.remotedoor.ui.HomeFragment
@@ -13,6 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var autoCloseTimer: CountDownTimer? = null
+    private var menuExpanded = false
     private var currentTabId: Int = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,19 +23,83 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (savedInstanceState == null) {
-            switchFragment(HomeFragment())
-        }
+        currentTabId = savedInstanceState?.getInt(KEY_TAB, R.id.nav_home) ?: R.id.nav_home
+        setupSideMenu()
 
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            if (item.itemId == currentTabId) return@setOnItemSelectedListener true
-            currentTabId = item.itemId
-            when (item.itemId) {
-                R.id.nav_home -> switchFragment(HomeFragment())
-                R.id.nav_settings -> switchFragment(SettingsFragment())
-                else -> false
+        if (savedInstanceState == null) {
+            switchFragment(HomeFragment(), R.id.nav_home)
+        } else {
+            when (currentTabId) {
+                R.id.nav_settings -> switchFragment(SettingsFragment(), R.id.nav_settings)
+                else -> switchFragment(HomeFragment(), R.id.nav_home)
             }
         }
+    }
+
+    private fun setupSideMenu() {
+        binding.fabMenuToggle.setOnClickListener { toggleSideMenu() }
+        binding.fabNavHome.setOnClickListener {
+            collapseSideMenu()
+            switchFragment(HomeFragment(), R.id.nav_home)
+        }
+        binding.fabNavSettings.setOnClickListener {
+            collapseSideMenu()
+            switchFragment(SettingsFragment(), R.id.nav_settings)
+        }
+        updateNavHighlight()
+    }
+
+    private fun toggleSideMenu() {
+        if (menuExpanded) {
+            collapseSideMenu()
+        } else {
+            expandSideMenu()
+        }
+    }
+
+    private fun expandSideMenu() {
+        menuExpanded = true
+        binding.sideMenuItems.visibility = View.VISIBLE
+        binding.sideMenuItems.alpha = 0f
+        binding.sideMenuItems.translationX = 80f
+        binding.sideMenuItems.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setDuration(200)
+            .start()
+        binding.fabMenuToggle.setImageResource(R.drawable.ic_nav_arrow_right)
+    }
+
+    private fun collapseSideMenu() {
+        menuExpanded = false
+        binding.sideMenuItems.animate()
+            .alpha(0f)
+            .translationX(80f)
+            .setDuration(180)
+            .withEndAction {
+                binding.sideMenuItems.visibility = View.GONE
+            }
+            .start()
+        binding.fabMenuToggle.setImageResource(R.drawable.ic_nav_arrow_left)
+    }
+
+    private fun updateNavHighlight() {
+        binding.fabNavHome.backgroundTintList = ContextCompat.getColorStateList(
+            this,
+            if (currentTabId == R.id.nav_home) R.color.primary else R.color.nav_bg
+        )
+        binding.fabNavSettings.backgroundTintList = ContextCompat.getColorStateList(
+            this,
+            if (currentTabId == R.id.nav_settings) R.color.primary else R.color.nav_bg
+        )
+        binding.fabNavHome.imageTintList = ContextCompat.getColorStateList(
+            this,
+            if (currentTabId == R.id.nav_home) android.R.color.white else R.color.primary
+        )
+        binding.fabNavSettings.imageTintList = ContextCompat.getColorStateList(
+            this,
+            if (currentTabId == R.id.nav_settings) android.R.color.white else R.color.primary
+        )
     }
 
     fun logout() {
@@ -43,11 +110,12 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun switchFragment(fragment: Fragment): Boolean {
+    private fun switchFragment(fragment: Fragment, tabId: Int) {
+        currentTabId = tabId
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
-        return true
+        updateNavHighlight()
     }
 
     fun startAutoCloseTimer(seconds: Int, onTick: (Int) -> Unit, onFinish: () -> Unit) {
@@ -71,5 +139,14 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         cancelAutoCloseTimer()
         super.onDestroy()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(KEY_TAB, currentTabId)
+        super.onSaveInstanceState(outState)
+    }
+
+    companion object {
+        private const val KEY_TAB = "current_tab"
     }
 }

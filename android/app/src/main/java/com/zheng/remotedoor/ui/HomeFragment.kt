@@ -1,5 +1,6 @@
 package com.zheng.remotedoor.ui
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,6 +23,7 @@ class HomeFragment : Fragment() {
     companion object {
         private const val VIDEO_WIDTH = 640
         private const val VIDEO_HEIGHT = 480
+        private const val LANDSCAPE_VIDEO_WEIGHT = 0.58f
     }
 
     private var _binding: FragmentHomeBinding? = null
@@ -46,17 +48,44 @@ class HomeFragment : Fragment() {
         setupDoorControls()
         observeMqttState()
         restoreCurrentState()
+        applyInitialVideoHeight()
     }
 
     private fun setupVideoAspectRatio() {
         val container = binding()?.videoContainer ?: return
-        container.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
-            updateVideoContainerSize(v.width)
+        container.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) {
+                updateVideoContainerSize(right - left)
+            }
         }
-        container.post { updateVideoContainerSize(container.width) }
     }
 
-    private fun updateVideoContainerSize(width: Int = binding()?.videoContainer?.width ?: 0) {
+    private fun applyInitialVideoHeight() {
+        binding()?.root?.post { updateVideoContainerSize() }
+    }
+
+    private fun resolveContainerWidth(): Int {
+        val container = binding()?.videoContainer ?: return 0
+        if (container.width > 0) return container.width
+
+        val root = binding()?.root ?: return 0
+        val horizontalPadding = root.paddingLeft + root.paddingRight
+        if (root.width > 0) {
+            return root.width - horizontalPadding
+        }
+
+        val dm = resources.displayMetrics
+        val screenWidth = dm.widthPixels
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val contentWidth = screenWidth - horizontalPadding
+        return if (isLandscape) {
+            (contentWidth * LANDSCAPE_VIDEO_WEIGHT).toInt()
+        } else {
+            contentWidth
+        }
+    }
+
+    private fun updateVideoContainerSize(width: Int = resolveContainerWidth()) {
         val container = binding()?.videoContainer ?: return
         if (width <= 0) return
         val targetHeight = (width * VIDEO_HEIGHT.toFloat() / VIDEO_WIDTH).toInt()

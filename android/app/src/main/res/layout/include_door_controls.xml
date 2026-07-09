@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/controlsPanel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/control_row_margin"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/SectionLabel"
+            android:layout_width="@dimen/section_label_width"
+            android:layout_height="wrap_content"
+            android:text="@string/iron_short" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnIronUp"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/iron_red"
+            android:text="@string/iron_up"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnIronStop"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/iron_red"
+            android:text="@string/iron_stop"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnIronDown"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/iron_red"
+            android:text="@string/iron_down"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/control_row_margin"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/SectionLabel"
+            android:layout_width="@dimen/section_label_width"
+            android:layout_height="wrap_content"
+            android:text="@string/glass_short" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGlassOpen"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/glass_green"
+            android:text="@string/glass_open_short"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGlassClose"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/glass_green"
+            android:text="@string/glass_close_short"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGlassInOut"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/glass_green"
+            android:text="@string/glass_in_out_short"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGlassOnlyOut"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/glass_green"
+            android:text="@string/glass_only_out_short"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/SectionLabel"
+            android:layout_width="@dimen/section_label_width"
+            android:layout_height="wrap_content"
+            android:text="@string/light_short" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLightLeft"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/control_btn_gap"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary"
+            android:text="@string/light_left"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLightRight"
+            style="@style/CompactControlButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary"
+            android:text="@string/light_right"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</LinearLayout>

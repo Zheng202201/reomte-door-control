@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="control_btn_height">38dp</dimen>
+    <dimen name="control_btn_text">11sp</dimen>
+    <dimen name="control_row_margin">6dp</dimen>
+</resources>
